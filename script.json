@@ -1,0 +1,21 @@
+{
+  "icon": "calendar.badge.clock",
+  "color": "rgba(255, 115, 64, 1)",
+  "entry": "index.tsx",
+  "runInApp": false,
+  "intentInputTypes": [],
+  "author": null,
+  "remoteResource": null,
+  "description": "到期管家；支持完成后周期、费用概览和公网服务器长期滚动邮件提醒。",
+  "iconImage": null,
+  "localizedNames": {
+    "zh-Hant": "到期管家",
+    "zh-Hans": "到期管家",
+    "en": "Due Manager"
+  },
+  "version": "3.1.0",
+  "localizedDescriptions": {},
+  "permissions": null,
+  "name": "到期管家",
+  "contributors": []
+}
