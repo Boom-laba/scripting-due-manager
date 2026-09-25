@@ -1,0 +1,144 @@
+import type { Color } from "scripting"
+import type { ItemKind } from "./item_kinds"
+import type { NotificationSettings } from "./notifications"
+
+export type { ItemKind } from "./item_kinds"
+
+export type RecurrenceUnit = "day" | "week" | "month" | "year"
+
+export interface RecurrenceRule {
+  unit: RecurrenceUnit
+  interval: number
+  /** Original calendar-day anchor. Never derive this again from a clamped month. */
+  anchorDay: number
+  anchorMonth: number
+  useMonthEnd: boolean
+  leapDayPolicy: "feb28" | "mar1"
+  /** Floating recurrence: calculate the next occurrence from completion day. */
+  fromCompletion: boolean
+}
+
+export interface ManualDueItem {
+  id: string
+  title: string
+  kind: ItemKind
+  /** null follows the title/type automatically; a value locks a local SF Symbol. */
+  iconName: string | null
+  /** Local calendar date in YYYY-MM-DD. Do not parse with new Date(dateKey). */
+  dueDate: string
+  includesTime: boolean
+  hour: number
+  minute: number
+  /** Moves the action/reminder date earlier without changing the real due-date anchor. */
+  remindBeforeDays: number
+  recurrence: RecurrenceRule | null
+  amount: string
+  note: string
+  enabled: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface AppSettings {
+  includeReminders: boolean
+  reminderHorizonDays: number
+  /** Empty means every Apple Reminders list. Values are Calendar identifiers. */
+  reminderCalendarIDs: string[]
+  showAmounts: boolean
+}
+
+export interface AppState {
+  schemaVersion: 3
+  items: ManualDueItem[]
+  settings: AppSettings
+  updatedAt: number
+  /** Saved together with manual mutations so an incomplete write cannot invent a completion. */
+  completionHistory?: CompletionRecord[]
+}
+
+export interface CompletionRecord {
+  id: string
+  source: "manual" | "reminder"
+  itemID: string
+  title: string
+  dueDate: string
+  completedAt: number
+  action: "complete" | "skip"
+  undoneAt: number | null
+  /** Only manual items are safely undoable; EventKit has no exposed revision token. */
+  before?: ManualDueItem
+  after?: ManualDueItem
+}
+
+export interface LocalSnapshot {
+  id: string
+  createdAt: number
+  reason: string
+  state: AppState
+  notificationSettings?: NotificationSettings
+}
+
+export interface CachedReminderItem {
+  id: string
+  title: string
+  dueDate: string
+  includesTime: boolean
+  hour: number
+  minute: number
+  dueTimestamp: number
+  calendarTitle: string
+  /** Icon inferred from Apple Reminders notes; the notes text itself is never cached. */
+  noteIconHint: string | null
+  priority: number
+  /** False for read-only shared reminder lists. */
+  canComplete: boolean
+}
+
+export interface ReminderSnapshot {
+  schemaVersion: 1
+  fetchedAt: number
+  /** Query scope for this snapshot. Empty means every reminders list. */
+  calendarFilterIDs: string[]
+  items: CachedReminderItem[]
+}
+
+export interface DisplayDueItem {
+  id: string
+  source: "manual" | "reminder"
+  /** Identifies this exact occurrence so an old widget button cannot complete a later one. */
+  completionKey: string
+  title: string
+  kind: ItemKind | "reminder"
+  iconName: string
+  iconColor: Color
+  dueDate: string
+  includesTime: boolean
+  hour: number
+  minute: number
+  dueTimestamp: number
+  /** Zero for Apple Reminders; manual items may enter the action queue earlier. */
+  remindBeforeDays: number
+  amount: string
+  note: string
+  priority: number
+  stale: boolean
+  /** Whether the source permits completing this item from the widget. */
+  canComplete: boolean
+}
+
+export interface ReminderLoadResult {
+  items: DisplayDueItem[]
+  fetchedAt: number | null
+  /** True when this result came from a successful live EventKit query. */
+  live: boolean
+  fromCache: boolean
+  error: string | null
+}
+
+export interface WidgetActionStatus {
+  schemaVersion: 1
+  /** New warnings have a unique identity; legacy messages use their timestamp. */
+  eventID?: string
+  createdAt: number
+  message: string
+}
